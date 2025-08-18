@@ -1,0 +1,39 @@
+{
+  "files": {
+    "main.css": "/static/css/main.9614cf04.css",
+    "main.js": "/static/js/main.49671565.js",
+    "static/media/4.JPG": "/static/media/4.6e490ff27dee1437696e.JPG",
+    "static/media/5.JPG": "/static/media/5.31dcefc93b8c6b16309d.JPG",
+    "static/media/8.JPG": "/static/media/8.885db613562cfe42071d.JPG",
+    "static/media/3.JPG": "/static/media/3.5d5d3047f3b8d0239feb.JPG",
+    "static/media/2.JPG": "/static/media/2.f1c187681fdf8b5cc4fd.JPG",
+    "static/media/7.JPG": "/static/media/7.720fe6d2b1342beda98b.JPG",
+    "static/media/6.JPG": "/static/media/6.4a3a7097fd28fee6ba87.JPG",
+    "static/media/yuktivideo.mp4": "/static/media/yuktivideo.267dced331c697736e02.mp4",
+    "static/media/1.JPG": "/static/media/1.a10f6ca845b778b25c20.JPG",
+    "static/media/vtu-logo.png": "/static/media/vtu-logo.c884a65ffa1f89da3ad5.png",
+    "static/media/collage.jpg": "/static/media/collage.ae903be7427c3b2245a0.jpg",
+    "static/media/skit.jpg": "/static/media/skit.175916a0ee6cdf1a8dde.jpg",
+    "static/media/fashion_show.jpg": "/static/media/fashion_show.3f39e53c7786f2c7c2c0.jpg",
+    "static/media/group_dance.jpg": "/static/media/group_dance.05f7abdcd918e9364e13.jpg",
+    "static/media/gyan_thantra.jpg": "/static/media/gyan_thantra.a807f257ec7c4d15e36b.jpg",
+    "static/media/mime.jpg": "/static/media/mime.6259441ce220b2cb026e.jpg",
+    "static/media/dumb_charades.jpg": "/static/media/dumb_charades.6ece8ecb383d2c173695.jpg",
+    "static/media/rangoli.jpg": "/static/media/rangoli.f72ebb7e47a06c28a508.jpg",
+    "static/media/stand_up.jpg": "/static/media/stand_up.17983a17c3f890079c59.jpg",
+    "static/media/group_singing.jpeg": "/static/media/group_singing.f0514566e329a75fa8a3.jpeg",
+    "static/media/close.jpg": "/static/media/close.a87381640e568bff547d.jpg",
+    "static/media/painting.jpg": "/static/media/painting.cccc863fa42ee86c484e.jpg",
+    "static/media/solo_singing.jpg": "/static/media/solo_singing.8c0d25955eb9307f38b1.jpg",
+    "static/media/mad_ads.jpg": "/static/media/mad_ads.32b95a0a69149307c01d.jpg",
+    "static/media/blue4.jpg": "/static/media/blue4.cc465f0621502f5d2bca.jpg",
+    "static/media/product_launch.jpg": "/static/media/product_launch.17e24c77d9b5602db2de.jpg",
+    "index.html": "/index.html",
+    "main.9614cf04.css.map": "/static/css/main.9614cf04.css.map",
+    "main.49671565.js.map": "/static/js/main.49671565.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9614cf04.css",
+    "static/js/main.49671565.js"
+  ]
+}
