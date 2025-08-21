@@ -5,6 +5,14 @@ const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
 const sendConfirmationEmail = require('../utils/sendEmail');
+const { customAlphabet } = require("nanoid");
+
+// ================== CONFIG ==================
+const nanoid = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 8);
+function generateUniqueId() {
+  const year = new Date().getFullYear();
+  return `YUKTI-${year}-${nanoid()}`;
+}
 
 // ✅ Excel file path
 // ✅ File paths for separate Excel files
@@ -64,62 +72,48 @@ function saveToExcel(filePath, data) {
 // ✅ Route to register user
 router.post('/register', async (req, res) => {
   try {
-    const { event, name, USN, college, department, year, email, phone, members, payment } = req.body;
+    let { event, name, USN, college, department, year, email, phone, members, payment } = req.body;
 
-    // Group event validation
+    // Group event check
     const isGroupEvent = memberLimits[event]?.max > 1;
-    
-     // Use groupName for group events
-    if (isGroupEvent) {
-      name = groupName || name;
+    if (isGroupEvent && req.body.groupName) {
+      name = req.body.groupName; // use group name if provided
     }
 
     // --- VALIDATION ---
     if (!event || !name || !college || !department || !year || !email || !phone) {
       return res.status(400).json({ error: 'All required fields must be filled!' });
     }
-
     if (!payment || !payment.transactionId || !payment.amount || !payment.paymentMethod) {
       return res.status(400).json({ error: 'All payment details are required!' });
     }
-
     if (!isGroupEvent && !USN) {
       return res.status(400).json({ error: 'USN is required for solo events!' });
     }
 
-    // --- CHECK DUPLICATES FOR SAME EVENT ---
+    // --- DUPLICATE CHECK (same event) ---
     const duplicateCheck = await Registration.findOne({
       event: event,
-      $or: [
-        { email: email },
-        { USN: USN },
-        { "members.usn": USN }
-      ]
+      $or: [{ email: email }, { USN: USN }, { "members.usn": USN }]
     });
     if (duplicateCheck) {
-      return res.status(400).json({
-        error: `You have already registered for ${event}.`
-      });
+      return res.status(400).json({ error: `You have already registered for ${event}.` });
     }
-    
-    // --- CHECK UNIQUE TRANSACTION ID ---
-    const existingTransaction = await Registration.findOne({
-      "payment.transactionId": payment.transactionId
-    });
+
+    // --- UNIQUE TRANSACTION ID CHECK ---
+    const existingTransaction = await Registration.findOne({ "payment.transactionId": payment.transactionId });
     if (existingTransaction) {
-      return res.status(400).json({
-        error: `Transaction ID "${payment.transactionId}" is already used for another registration.`
-      });
+      return res.status(400).json({ error: `Transaction ID "${payment.transactionId}" is already used for another registration.` });
     }
+
+    // --- GROUP VALIDATION ---
     if (isGroupEvent) {
       const existingGroup = await Registration.findOne({
         event: event,
         name: { $regex: `^${name.trim()}$`, $options: 'i' }
       });
       if (existingGroup) {
-        return res.status(400).json({
-          error: `Group "${name}" has already registered for ${event}.`
-        });
+        return res.status(400).json({ error: `Group "${name}" has already registered for ${event}.` });
       }
 
       const { min, max } = memberLimits[event];
@@ -133,9 +127,18 @@ router.post('/register', async (req, res) => {
       }
     }
 
+    // --- UNIQUE ID (reuse or generate new) ---
+    const existingUser = await Registration.findOne({ email });
+    let uniqueId;
+    if (existingUser) {
+      uniqueId = existingUser.uniqueId;
+    } else {
+      uniqueId = generateUniqueId();
+    }
 
     // ✅ Save to MongoDB
-    const newRegistration = new Registration({ 
+    const newRegistration = new Registration({
+      uniqueId,
       event,
       name,
       USN: isGroupEvent ? '' : USN,
@@ -145,63 +148,79 @@ router.post('/register', async (req, res) => {
       email,
       phone,
       members: isGroupEvent ? members : [],
-      payment: {              // ✅ Added payment field to MongoDB document
+      payment: {
         transactionId: payment.transactionId,
         amount: payment.amount,
         method: payment.paymentMethod
       }
     });
     await newRegistration.save();
-
-    // ✅ Save to Excel
-    if (isGroupEvent) {
-      // Save one row per member
-      members.forEach(m => {
-        const dataToSave = {
-          Event: event,
-          Group_Name: name,
-          Member_Name: m.name,
-          Member_USN: m.usn,
-          College: college,
-          Department: department,
-          Year: year,
-          Email: email,
-          Phone: phone,
-          Transaction_ID: payment.transactionId,
-          Amount: payment.amount,
-          Payment_Method: payment.paymentMethod,
-          Date: new Date()
-        };
-        saveToExcel(groupFilePath, dataToSave);
-      });
-    } else {
-      // Solo events = single row
-      const dataToSave = {
-        Event: event,
-        Name: name,
-        USN: USN,
-        College: college,
-        Department: department,
-        Year: year,
-        Email: email,
-        Phone: phone,
-        Transaction_ID: payment.transactionId,
-        Amount: payment.amount,
-        Payment_Method: payment.paymentMethod,
-        Date: new Date()
-      };
-      saveToExcel(soloFilePath, dataToSave);
-    }
-
     
-    // ✅ Send Confirmation Email
+    // ✅ Send email immediately so frontend knows if it worked
+    let emailSent = false;
     try {
-      await sendConfirmationEmail(email, event);
-    } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+      await sendConfirmationEmail(email, event, uniqueId);
+      emailSent = true;
+    } catch (err) {
+      console.error("❌ Email sending failed:", err.message);
     }
 
-    res.status(201).json({ message: 'Registration successful and saved to Excel, and email sent!' });
+    // ✅ Respond instantly to frontend
+    res.status(201).json({
+      message: 'Registration successful!',
+      uniqueId,
+      event,
+      emailSent
+    });
+
+    // ✅ Do Excel + Email in background (non-blocking)
+    process.nextTick(async () => {
+      try {
+        if (isGroupEvent) {
+          members.forEach(m => {
+            const dataToSave = {
+              Unique_ID: uniqueId,
+              Event: event,
+              Group_Name: name,
+              Member_Name: m.name,
+              Member_USN: m.usn,
+              College: college,
+              Department: department,
+              Year: year,
+              Email: email,
+              Phone: phone,
+              Transaction_ID: payment.transactionId,
+              Amount: payment.amount,
+              Payment_Method: payment.paymentMethod,
+              Date: new Date()
+            };
+            saveToExcel(groupFilePath, dataToSave);
+          });
+        } else {
+          const dataToSave = {
+            Unique_ID: uniqueId,
+            Event: event,
+            Name: name,
+            USN: USN,
+            College: college,
+            Department: department,
+            Year: year,
+            Email: email,
+            Phone: phone,
+            Transaction_ID: payment.transactionId,
+            Amount: payment.amount,
+            Payment_Method: payment.paymentMethod,
+            Date: new Date()
+          };
+          saveToExcel(soloFilePath, dataToSave);
+        }
+        console.log(`✅ Excel saved for ${email}`);
+      } catch (err) {
+        console.error("⚠️ Excel save failed:", err.message);
+      }
+        
+    });
+
   } catch (error) {
     console.error('Error during registration:', error);
     res.status(500).json({ error: 'Server error. Registration failed' });
