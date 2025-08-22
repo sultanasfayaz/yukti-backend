@@ -15,14 +15,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "xlsx": "^0.18.5",
+    "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.3",
+    "nanoid": "^5.1.5",
     "nodemailer": "^6.9.4",
-    "concurrently": "^8.2.2"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
