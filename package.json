@@ -7,6 +7,7 @@
     "server": "nodemon server/server.js",
     "client": "npm start --prefix yukti-web",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,6 +15,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "xlsx": "^0.18.5",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
